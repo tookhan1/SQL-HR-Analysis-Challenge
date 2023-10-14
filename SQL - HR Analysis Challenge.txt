@@ -1,0 +1,250 @@
+HR Analysis Challenge
+
+The HR department of your company reached out hoping you can help them understand: what drives high performing employees to quit?
+
+To help you in this task they have provided an internal dataset with information on thousands of past employees.
+
+*This is a project that I’ve provided my very own analysis on to demonstrate both my technical skills with SQL as well as my data storytelling/soft skills to make sense of these findings and actually apply it to the real world. 
+
+Well-Defined Business Questions
+
+The first thing we should do is formulate business questions that will help us have a central findings that we are researching for. This is key to successful outcomes in the data analytics process and ensuring our queries have meaningful insights. 
+
+
+Business Questions to answer:
+
+1. Report on the main drivers of employee churn
+2. Determine if the reasons behind high performer churn are the same as for a regular employee.
+3. Provide recommendations on how to decrease employee churn.
+
+
+Drilling Down Business Questions. 
+
+An important step is to further refine these questions and get to more specific aspects of the business questions we are trying to solve. This will allow me to have a bit more of a guide to what I’m looking for while querying for a solution. 
+
+1. Report on the main drivers of employee churn
+Fairly straightforward question. Cannot dig deeper into the question. 
+
+2. Determine if the reasons behind high performer churn are the same as for a regular employee.
+What would we define as a high performer?
+
+3. Provide recommendations on how to decrease employee churn.
+Fairly straightforward question as well. 
+
+
+Research Criteria
+
+To start off, we should define what high performers are then. 
+
+I looked at the main KPIs for a successful employee in the data and I took the average as a baseline. Then created the criteria to only select the above average employees. 
+
+High performers are defined as either:
+• Above average evaluation score
+• Have been with company for 4 years or more
+• Are engaged in 5 projects or more.
+
+
+Data Analytics Process
+
+
+Queries for High Performer Employees - Finding the Average
+
+First look at the data, 
+
+
+select * from hrdata;
+
+
+
+
+
+Based on the dataset and our definition of high performers, last_evaulation, time_spent_company and number of projects are great factors to sort by. 
+
+Since we want the best performing employees,let’s find the average last_evaluation so we can figure out the above average benchmark.
+
+
+Select avg(last_evaluation) from hrdata;
+
+
+# avg(last_evaluation)
+'0.7161017401159969'
+
+
+With the average last_evaluation, we’ll create a query that sorts employees with above average evaluation scores, spent at least 4 years with the company and have at least 5 projects. 
+
+Queries for High Performer Employees - Created the High Performer query
+
+
+Select *,
+Case when last_evaluation > 0.716 or time_spend_company >= 4 or number_project >= 5 then "High Performer"
+Else "Low Performer" end as Performer
+from hrdata; 
+
+
+
+As you can see, we added a column that shows which of these employees are high performers or low performers. 
+
+Someone with a great evaluation, who’s worked on multiple projects and been with the company for many years are fairly straightforward KPIs to determine a high performing employee. 
+
+
+Building Performers into the Dataset
+
+
+This query is very useful but it’d be nice to create more queries with the Performers column already in the dataset. So we’ll create a new table that adds the Performers column. 
+
+
+Create table masterhrdata as
+Select *,
+Case when last_evaluation > 0.716 or time_spend_company >= 4 or number_project >= 5 then "High Performer"
+Else "Low Performer" end as Performer
+from hrdata; 
+
+
+Now that the new table is made, we can use the Performer column to make more meaningful queries to dip deeper at the numbers. 
+
+
+Select * from masterhrdata;
+
+
+
+
+Work Accidents 
+
+Looked at work accidents and see if there’s a strong correlation with work accidents and churn. 
+
+Select work_accident, churn, count(*)
+ from masterhrdata
+ where Performer = "High Performer"
+ group by 1,2;
+
+
+# work_accident	churn	     count(*)
+0	              0	      6703
+1		  0	      1448
+0		  1	      1920
+1		  1	        96
+
+
+Based on the numbers, most people who had work accidents ended up staying at the company so it doesn’t seem to be a huge factor for churn. Shows company handles work accidents well.
+
+Time Spent with Company
+
+
+
+Next we looked at time spent with the company and how much churn there is, per year, that they’ve been at the company.
+
+Select time_spend_company, churn, count(*)
+ from masterhrdata
+ where Performer = "High Performer"
+ group by 1,2;
+
+
+# time_spend_company      churn	          count(*)
+2			0		1880
+2			1		38
+3			0		2891
+3			1		46
+4			0		1667
+4			1		890
+5			0		640
+5			1		833
+6			0		509
+6			1		209
+7			0		188
+8			0		162
+10			0		214
+
+
+
+We found after 6 years, the longer someones been with the company the less churn.
+
+A lot of people are quitting after 4-5 years with the company, but most employees stay so the 3rd or 4th year is a very big indicator of churn so management can be wary once an employee gets to their 4th or 5th year with the company. The company can start retention efforts during the 3rd year if they have the capital to keep the employee morale up before the drop. 
+
+Time Spent with Company - Optimized 
+
+Another, more concise way I looked at this same idea was to order an employee's time spent with the company in either short, medium or long duration and see the level of churn that way. We define long duration as 7+ years, medium duration as 4-6 years and short duration as 3 or under. 
+
+ Select Case when time_spend_company >= 7  then "long duration"
+when time_spend_company >= 4 then "medium duration"
+Else "Low duration" end as Duration
+, churn, count(*)
+ from masterhrdata
+ where Performer = "High Performer"
+ group by 1, 2
+;
+
+Duration		churn		 count(*)
+
+'long duration'	 	  '0'		  '564'
+'Low duration'		  '0'		 '4771'
+'Low duration'	 	  '1'		   '84'
+'medium duration'	  '0'		 '2816'
+'medium duration'	  '1' 		 '1932'
+
+
+Based on the data here, it confirms our initial analysis. Once an employee has stayed with the company after 3 years, they begin to contemplate their future with the company and a lot of those employees feel that leaving the company is their best option. 
+
+An important note here is this is something the company can look into as talent is hard to find and an employee who’s stayed for over 3 years have generally established themselves as competent workers and like the workplace culture enough to stay after a whole year, let alone 2. 
+
+
+ 
+Employee Evaluations
+
+Finally, we looked at the churn in relation to employee evaluations. Since the evaluation is from a scale from 1 to 10, we define “Great Evaluation” as an 8+, “Poor Evaluation” as 5 or under, any score in between (6-7) is defined as “Fair Evaluation”.
+ 
+ Select Case when last_evaluation >= 0.8 then "Great Evaluation"
+ when last_evaluation >= 0.5 then "Poor Evaluation" 
+ Else "Fair Evaluation" end as Evaluation
+ , churn, count(*)
+ from masterhrdata
+ group by 1,2;
+
+
+
+
+Evaluation                churn     count
+
+Poor Evaluation	0	6451
+Poor Evaluation	1	1240
+Great Evaluation	0	3998
+Great Evaluation	1	1742
+Fair Evaluation	0	979
+Fair Evaluation	1	589
+
+
+As seen, more people have left the company with a great evaluation than those who left with poor evaluation. This is an alarming report for a company as good employees are hard to come by. In addition, if the majority of employees that stay are fair or poor evaluation employees, that means the quality of the businesses output will suffer whether it’s implicit or explicit. Therefore, it’s important to retain your best employees as it’s proven having the best talent pool will directly improve your business compared to having a less than desired talent pool. 
+
+Key Findings:
+
+Many high-performing employees who left the company had been there for over two years and didn't receive promotions. This suggests that a lack of promotional opportunities is a major reason for their departure.
+
+To answer our research questions:
+
+Report on the main driver(s) of employee churn?
+
+Lack of promotions are the main driver of employee churn. 
+
+Within the first 6 years, the longer an employee spends at the company, the higher the likelihood they are to quit. However, after the 6+ year mark, the employees will be confidently retained by the company.
+
+If the company can promote or find ways for others to retain employees until the 6 year mark, they’ll do a better job at retaining their staff. 
+
+
+Determine if the reasons behind high performer churn are the same as for a regular employee?
+
+Based on the research, the reasons for churn are the same for both high performing and regular employees. Whether it was for multiple factors that we researched above, high performing and regular performing employees left are leaving for the same reasons.  
+
+Provide recommendations on how to decrease employee churn?
+
+Improve Communication: Management should communicate openly about limited promotion opportunities while emphasizing the value and recognition of employees' contributions, especially during the 4th and 5th year of an employee's career at the company.
+
+Alternative Rewards: Explore non-promotion-based rewards like increased responsibilities, special projects, or higher visibility within the organization.
+
+Career Development Programs: Invest in training, mentoring, and skill enhancement programs to show commitment to employees' professional growth.
+
+Succession Planning: Identify potential future leaders and create individualized development plans to prepare employees for advancement, especially for employees heading into retirement.
+
+Employee Feedback and Engagement: Regularly seek feedback and involve employees in decision-making to address concerns and foster loyalty, especially during the 4th and 5th year of an employee's career at the company.
+
+Conclusion:
+
+To retain high-performing employees despite limited promotions, the organization should improve communication, explore alternative rewards, invest in career development, implement succession planning, and promote employee engagement. As most employees leave after 4 or 5 years, it’s crucial employees focus their retention efforts around this time to effectively use company resources. Retention efforts could begin during the employees 3rd year which can help keep employees morale up before they begin to drop. 
