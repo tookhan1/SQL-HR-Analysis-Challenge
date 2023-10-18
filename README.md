@@ -9,6 +9,6 @@ Given internal datasets of past employees, designed a database to understand "wh
 
 * More complex queries such as SUBSTR, SELECT INFO, CREATE VIEW
 
-* Editing a table, creating a database (most relevant for SQL challenges)
+* Editing a table, creating a database
 * Constraints (ex. PRIMARY, AND FOREIGN KEYS, CASE WHEN, CHECK, UNIQUE, NOT NULL)
 * More complex queries (ex. PIVOT, PARTITION BY, OVER)
